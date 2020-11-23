@@ -1,9 +1,9 @@
 # FWH-OpenFOAM
 FWH post-processing scripts for OpenFOAM solutions
 
- The formulation I implemented is only for the pressure on solid surfaces though and does not include convection. I hope this also suits your needs.
-
-To use the script, you need to sample the surface pressure during the simulation. I use this function in OpenFOAM:
+ The formulation I implemented is only for the pressure on solid surfaces though and does not include convection. 
+ 
+To use the script, you need to sample the surface pressure during the simulation. Use this function in OpenFOAM:
 
 
 ```
