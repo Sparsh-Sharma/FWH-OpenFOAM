@@ -6,9 +6,10 @@ FWH post-processing scripts for OpenFOAM solutions
 To use the script, you need to sample the surface pressure during the simulation. I use this function in OpenFOAM:
 
 
-//
+```
 functions
 {
+
   surfaceSampling
     {
         type surfaces;
@@ -40,7 +41,8 @@ functions
         );
     }
 }
-//
+
+```
 
 You can simply add this to the end of your controlDict and replace "airfoil" with the name of the noSlip/solidsurface-patch from which you want to calculate the sound radiation. Just make sure that "writeTime" is a feasible sampling frequency.
 
