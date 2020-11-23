@@ -44,3 +44,5 @@ functions
 //
 
 You can simply add this to the end of your controlDict and replace "airfoil" with the name of the noSlip/solidsurface-patch from which you want to calculate the sound radiation. Just make sure that "writeTime" is a feasible sampling frequency.
+
+The "readData_Mesh_OpenFOAM"-script reads all the geometrical information needed from the mesh and the sampled pressure data and saves them. "acousticPython6O" calculates the acoustic pressure from the saved file.
