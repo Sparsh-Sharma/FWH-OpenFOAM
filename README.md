@@ -5,6 +5,8 @@ FWH post-processing scripts for OpenFOAM solutions
 
 To use the script, you need to sample the surface pressure during the simulation. I use this function in OpenFOAM:
 
+
+
 functions
 {
 
