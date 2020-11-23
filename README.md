@@ -9,7 +9,6 @@ To use the script, you need to sample the surface pressure during the simulation
 //
 functions
 {
-
   surfaceSampling
     {
         type surfaces;
