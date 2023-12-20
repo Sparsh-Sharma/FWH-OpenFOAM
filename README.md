@@ -1,4 +1,30 @@
 # FWH-OpenFOAM
+
+![Python Logo](https://www.python.org/static/community_logos/python-logo.png)
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/your-username/your-repo)](https://github.com/your-username/your-repo/issues)
+[![GitHub stars](https://img.shields.io/github/stars/your-username/your-repo)](https://github.com/your-username/your-repo/stargazers)
+
+## Description
+
+Briefly describe your project here. Highlight its purpose, features, and potential benefits.
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
+
+Provide step-by-step instructions on how to install and run your project. Include any dependencies and prerequisites needed.
+
+```bash
+pip install your-package
+
+# FWH-OpenFOAM
 FWH post-processing scripts for OpenFOAM solutions
 
  The formulation I implemented is only for the pressure on solid surfaces though and does not include convection. 
