@@ -68,46 +68,22 @@ functions
     }
 }
 
-```
 
-You can simply add this to the end of your controlDict and replace "airfoil" with the name of the noSlip/solidsurface-patch from which you want to calculate the sound radiation. Just make sure that "writeTime" is a feasible sampling frequency.
 
-The "readData_Mesh_OpenFOAM"-script reads all the geometrical information needed from the mesh and the sampled pressure data and saves them. "acousticPython6O" calculates the acoustic pressure from the saved file.
 
-Certainly! Here's a simple template for a README file that you can use for your GitHub repository. You can copy and paste this template into a file named `README.md` in the root of your project:
-
-```markdown
-# Sound Pressure Level Directivity Calculation
-
-## Overview
-
-This repository contains a Python script for calculating the directivity of sound pressure level (SPL) at different observer positions and frequencies. The script uses data from a geometry file to compute SPL directivity in a 3D space.
-
-## Requirements
-
-- Python 3
-- NumPy
-- Matplotlib
-
-Install the dependencies using:
-
-```bash
-pip install numpy matplotlib
-```
-
-## Usage
+## Usage for directivity.py
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/your-repository.git
-cd your-repository
+git clone https://github.com/Sparsh-Sharma/FWH-OpenFOAM.git
+cd FWH-OpenFOAM
 ```
 
 2. Run the script:
 
 ```bash
-python directivity_script.py
+python directivity.py
 ```
 
 3. View the generated polar plots in the `plots/` directory.
@@ -135,6 +111,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- This script was developed by [Your Name].
+- This script was developed by Sparsh Sharma.
 
 Feel free to customize this template according to your project's specific details. Add more sections as needed, such as installation instructions, troubleshooting tips, or any additional acknowledgments.
