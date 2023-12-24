@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import os
 from matplotlib.mlab import psd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -11,7 +12,6 @@ rho0 = 1.2  # density of air
 dt = fs**-1  # timesep
 # ---------------------
 
-# Load data_geo.pckl
 f = open('data_geo.pckl', 'rb')
 obj = pickle.load(f)
 f.close()
@@ -21,123 +21,155 @@ A = obj[0]  # area of each cell on the surface (face)
 n = obj[1]  # normal vector of face
 c_xyz = obj[2]  # centroid of A
 
-# Specify the specific frequency you're interested in (in Hz)
-specific_frequency = 0.01  # Replace this with your desired frequency
+# Additional Parameters
+num_angles = 21  # Number of angles to consider (0 to 360 degrees)
+num_phi = 11  # Number of phi angles to consider (0 to 180 degrees)
+theta_values = np.linspace(0, 360, num_angles)  # Angles in degrees
+phi_values = np.linspace(0, 180, num_phi)  # Phi angles in degrees
 
-# Define the observer positions on the surface of the sphere
-theta = np.linspace(0, 2 * np.pi, 10)
-phi = np.linspace(0, np.pi, 10)
-observer_positions = []
+# Specify the frequencies of interest
+freq_of_interest = [0.08]
 
-for t in theta:
-    for p in phi:
-        x = 0.4 * np.sin(p) * np.cos(t)
-        y = 0.4 * np.sin(p) * np.sin(t)
-        z = 0.4 * np.cos(p)
-        observer_positions.append(np.array([x, y, z]))
+# Specify the observer positions (x0 values)
+x0_values = [0.4]
 
-# Initialize an array to store SPL values
-SPL_field = np.zeros(len(observer_positions))
+# Initialize an array to store SPL values for each angle, phi, and frequency
+SPL_values_3D = np.zeros((num_angles, num_phi, len(freq_of_interest)))
 
-# Calculate SPL at each observer position
-print("Calculating SPL at observer positions...")
-total_positions = len(observer_positions)
+# Loop through different observer positions (x0 values)
+for x0 in x0_values:
+    # Loop through different angles
+    for idx_theta, theta in enumerate(theta_values):
+        # Loop through different phi angles
+        for idx_phi, phi in enumerate(phi_values):
+            # Calculate observer position for the current angle and phi
+            x0_theta_phi = np.array([x0 * np.sin(np.radians(phi)) * np.cos(np.radians(theta)),
+                                     x0 * np.sin(np.radians(phi)) * np.sin(np.radians(theta)),
+                                     x0 * np.cos(np.radians(phi))])
 
-for idx, x0 in enumerate(observer_positions):
-    # Calculate the force for every face
-    F = (-rho0 * A * p_cxyz.T).T
+            # Calculate the force for every face at the new observer position x0_theta_phi
+            F_theta_phi = (-rho0 * A * p_cxyz.T).T
 
-    # Calculate distance r from centroid to receiver location x0
-    r = np.sqrt(((c_xyz - x0)[:, 0])**2 + ((c_xyz - x0)[:, 1])**2 + ((c_xyz - x0)[:, 2])**2)
+            # Calculate distance r from centroid to the new observer position x0_theta_phi
+            r_theta_phi = np.sqrt(((c_xyz - x0_theta_phi)[:, 0])**2 + ((c_xyz - x0_theta_phi)[:, 1])**2 +
+                                 ((c_xyz - x0_theta_phi)[:, 2])**2)
 
-    # Unity vector in the direction r
-    e_r = np.empty(c_xyz.shape, dtype=float)
-    for comp in range(len(x0)):
-        e_r[:, comp] = np.divide((x0 - c_xyz)[:, comp], r)
+            # Calculate unity vector in the direction r_theta_phi
+            e_r_theta_phi = (x0_theta_phi - c_xyz) / r_theta_phi[:, np.newaxis]
 
-    # Retarded time tau0, find the difference to the minimum distance of all points and divide by propagation speed
-    tau0 = np.divide(r - np.min(r), c)
+            # Calculate retarded time tau_theta_phi
+            tau_theta_phi = (r_theta_phi - np.min(r_theta_phi)) / c
 
-    # For every time step, add all points in the observer point x0
-    p_L = np.ones(F.shape[1] - 6, dtype=float) - 1  # -6 in shape because sixth order
+            # Calculate pressure at each face for the new observer position x0_theta_phi
+            p_L_theta_phi = np.zeros(F_theta_phi.shape[1] - 6, dtype=float)  # -6 in shape because sixth order
 
-    total_faces = len(F)
-    for i, Frow in enumerate(F):
-        p_tau = (((45 * Frow[4:-2] - 45 * Frow[2:-4] - 9 * Frow[5:-1] + 9 * Frow[1:-5] - Frow[0:-6] + Frow[6:]).T) *
-                 np.dot(e_r[i, :], n[i, :])) * (4 * np.pi * c * r[i] * 60 * dt)**-1  # 6order
+            for i, Frow in enumerate(F_theta_phi):
+                p_tau_theta_phi = (((45 * Frow[4:-2] - 45 * Frow[2:-4] - 9 * Frow[5:-1] + 9 * Frow[1:-5] -
+                                     Frow[0:-6] + Frow[6:]).T) *
+                                   np.dot(e_r_theta_phi[i, :], n[i, :])) * \
+                                  (4 * np.pi * c * r_theta_phi[i] * 60 * dt)**-1  # 6order
 
-        pL_tau = np.zeros(len(p_tau))
-        pL_tau[:len(p_tau)] = p_tau[:len(pL_tau)]  # Shift the pressure signal by tau0
-        p_L = p_L + pL_tau  # Add the radiated sound from each face at the observer point x0
+                pL_tau_theta_phi = np.zeros(len(p_tau_theta_phi))
+                pL_tau_theta_phi[:len(p_tau_theta_phi)] = p_tau_theta_phi[:len(pL_tau_theta_phi)]
+                p_L_theta_phi = p_L_theta_phi + pL_tau_theta_phi
 
-        # Print progress for each position
-        progress = (i + 1) / total_faces * 100
-        remaining_iterations = total_faces - (i + 1)
-        print(f"\rPosition Progress: [{int(progress) * '=' + (100 - int(progress)) * ' '}] {int(progress)}% | Remaining Iterations: {remaining_iterations}", end='', flush=True)
-        
+            # Calculate Power Spectral Density (PSD) for the new observer position x0_theta_phi
+            H_NC_theta_phi = ((np.abs(p_L_theta_phi)) / (2.e-5))**2
+            val_NC_theta_phi, freq_NC_theta_phi = psd(H_NC_theta_phi, fs, detrend='mean')
 
-    # Calculate SPL
-    H_NC = ((np.abs(p_L)) / (2.e-5))**2
-    val_NC, freq_NC = psd(H_NC, fs, detrend='mean')
-    
-    # Find the index corresponding to the frequency closest to the specified value
-    freq_index = np.argmin(np.abs(freq_NC - specific_frequency))
-    SPL = 10 * np.log10(val_NC[freq_index] + 1e-10)  # Add a small value to avoid zero
+            # Find indices corresponding to frequencies of interest
+            indices_of_interest = [np.argmin(np.abs(freq_NC_theta_phi - f)) for f in freq_of_interest]
 
-    # Save SPL at this position
-    SPL_field[idx] = SPL
+            # Extract SPL values at frequencies of interest
+            SPL_values_3D[idx_theta, idx_phi, :] = 5 * np.log10(val_NC_theta_phi[indices_of_interest] + 1e-10)
 
-    # Print overall progress
-    overall_progress = (idx + 1) / total_positions * 100
-    remaining_iterations = total_positions - (idx + 1)
-    # print(f"\rOverall Progress: [{'=' * int(overall_progress) + ' ' * (100 - int(overall_progress))}] {int(overall_progress)}% | Remaining Iterations: {remaining_iterations}", end='', flush=True)
-    print(f"\rOverall Progress: [{int(overall_progress) * '=' + (100 - int(overall_progress)) * ' '}] {int(overall_progress)}% | Remaining Iterations: {remaining_iterations}", end='', flush=True)
-
-print("\nCalculations complete. Plotting SPL field...")
+            # Print progress
+            print(f'x0: {x0}, Iteration {idx_theta + 1}/{num_angles}, {idx_phi + 1}/{num_phi} - '
+                  f'Angle: {theta}, Phi: {phi}, SPL at {freq_of_interest} Hz: {SPL_values_3D[idx_theta, idx_phi, :]} dB')
 #%%
-# Plotting the SPL field as a surface without grids
-fig = plt.figure(figsize=(12, 10))
-ax = fig.add_subplot(111, projection='3d')
+import numpy as np
+import pickle
+import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
-# Extract x, y, z coordinates from observer_positions
-x = [pos[0] for pos in observer_positions]
-y = [pos[1] for pos in observer_positions]
-z = [pos[2] for pos in observer_positions]
+def interp_array(N1):  # add interpolated rows and columns to array
+    N2 = np.empty([int(N1.shape[0]), int(2*N1.shape[1] - 1)])  # insert interpolated columns
+    N2[:, 0] = N1[:, 0]  # original column
+    for k in range(N1.shape[1] - 1):  # loop through columns
+        N2[:, 2*k+1] = np.mean(N1[:, [k, k + 1]], axis=1)  # interpolated column
+        N2[:, 2*k+2] = N1[:, k+1]  # original column
+    N3 = np.empty([int(2*N2.shape[0]-1), int(N2.shape[1])])  # insert interpolated columns
+    N3[0] = N2[0]  # original row
+    for k in range(N2.shape[0] - 1):  # loop through rows
+        N3[2*k+1] = np.mean(N2[[k, k + 1]], axis=0)  # interpolated row
+        N3[2*k+2] = N2[k+1]  # original row
+    return N3
 
-# Create a 3D scatter plot of SPL_field
-sc = ax.scatter(x, y, z, c=SPL_field, cmap='viridis', s=80, edgecolor='k', linewidth=0.5)
+# Set up spherical coordinates
+theta_mesh, phi_mesh = np.meshgrid(np.linspace(0, 360, num_phi), np.linspace(0, 180, num_angles))
+# R = SPL_values_3D.mean(axis=1)  # Use mean SPL for radius
+R = np.mean(SPL_values_3D, axis=1)  # Use mean SPL for radius
 
-# Create a 3D surface plot from the scatter plot
-surf = ax.plot_trisurf(x, y, z, cmap='viridis', linewidth=0, antialiased=False, alpha=0.8)
 
-# Set labels and title
-ax.set_xlabel('X', fontsize=14)
-ax.set_ylabel('Y', fontsize=14)
-ax.set_zlabel('Z', fontsize=14)
-ax.set_title(f'SPL Field at {specific_frequency} Hz', fontsize=16)
+# Convert spherical coordinates to Cartesian coordinates
+X = R * np.sin(np.radians(phi_mesh)) * np.cos(np.radians(theta_mesh))
+Y = R * np.sin(np.radians(phi_mesh)) * np.sin(np.radians(theta_mesh))
+Z = R * np.cos(np.radians(phi_mesh))
 
-# Add a color bar
-norm = plt.Normalize(SPL_field.min(), SPL_field.max())
-sm = plt.cm.ScalarMappable(cmap='viridis', norm=norm)
-sm.set_array([])  # This line is necessary for ScalarMappable to work properly
+# Interpolate between points to increase the number of faces
+for _ in range(3):  # Interpolate three times (adjust as needed)
+    X = interp_array(X)
+    Y = interp_array(Y)
+    Z = interp_array(Z)
 
-# Display the color bar
-cbar = plt.colorbar(sm, ax=ax, pad=0.05)
-cbar.set_label('SPL (dB)', fontsize=14)
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(1, 1, 1, projection='3d')
+# ax = fig.add_subplot(111, projection='3d')
+ax.grid(True)
+ax.axis('off')
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set_zticks([])
 
-# Remove grid lines
-ax.grid(False)
+N = np.sqrt(X**2 + Y**2 + Z**2)
+Rmax = np.max(N)
+N = N / Rmax
 
-# Customize tick label size
-ax.tick_params(axis='x', labelsize=12)
-ax.tick_params(axis='y', labelsize=12)
-ax.tick_params(axis='z', labelsize=12)
+# axes_length = 1.5
+# ax.plot([0, axes_length * Rmax], [0, 0], [0, 0], linewidth=2, color='red', label='X-axis')
+# ax.plot([0, 0], [0, axes_length * Rmax], [0, 0], linewidth=2, color='green', label='Y-axis')
+# ax.plot([0, 0], [0, 0], [0, axes_length * Rmax], linewidth=2, color='blue', label='Z-axis')
 
-# Set background color to pure white
-fig.patch.set_facecolor('white')
+# Find middle points between values for face colors
+N = interp_array(N)[1::2, 1::2]
 
-# Save the plot as an image file
-plt.savefig(f'SPL_Field_{specific_frequency}Hz_surface_professional_white_background.png', bbox_inches='tight', dpi=300, facecolor='white')
+mycol = cm.viridis(N)
 
-# Display the plot
+surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, facecolors=mycol, linewidth=0.5, antialiased=True, shade=False)
+# surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, facecolors=mycol, cmap='viridis', edgecolor='k')
+# ax.set_xlim([-axes_length * Rmax, axes_length * Rmax])
+# ax.set_ylim([-axes_length * Rmax, axes_length * Rmax])
+# ax.set_zlim([-axes_length * Rmax, axes_length * Rmax])
+
+m = cm.ScalarMappable(cmap=cm.viridis)
+m.set_array(R)
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# Add color bar
+cbar = fig.colorbar(m, ax=ax, shrink=0.8)
+cbar.set_label('SPL (dB)', rotation=270, labelpad=15)
+
+# Set legend
+ax.legend(loc='upper right', fontsize='medium')
+
+# Set title
+ax.set_title('SPL Directivity in 3D')
+
+# Set view angle
+ax.view_init(azim=300, elev=30)
+
 plt.show()
