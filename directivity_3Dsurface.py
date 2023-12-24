@@ -4,6 +4,7 @@ import os
 from matplotlib.mlab import psd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import Normalize
 
 # ----------------
 fs = 100000  # sampling frequency
@@ -22,7 +23,7 @@ n = obj[1]  # normal vector of face
 c_xyz = obj[2]  # centroid of A
 
 # Additional Parameters
-num_angles = 21  # Number of angles to consider (0 to 360 degrees)
+num_angles = 11  # Number of angles to consider (0 to 360 degrees)
 num_phi = 11  # Number of phi angles to consider (0 to 180 degrees)
 theta_values = np.linspace(0, 360, num_angles)  # Angles in degrees
 phi_values = np.linspace(0, 180, num_phi)  # Phi angles in degrees
@@ -107,11 +108,9 @@ def interp_array(N1):  # add interpolated rows and columns to array
         N3[2*k+2] = N2[k+1]  # original row
     return N3
 
-# Set up spherical coordinates
+# Spherical coordinates
 theta_mesh, phi_mesh = np.meshgrid(np.linspace(0, 360, num_phi), np.linspace(0, 180, num_angles))
-# R = SPL_values_3D.mean(axis=1)  # Use mean SPL for radius
-R = np.mean(SPL_values_3D, axis=1)  # Use mean SPL for radius
-
+R = np.mean(SPL_values_3D, axis=1)
 
 # Convert spherical coordinates to Cartesian coordinates
 X = R * np.sin(np.radians(phi_mesh)) * np.cos(np.radians(theta_mesh))
@@ -119,52 +118,42 @@ Y = R * np.sin(np.radians(phi_mesh)) * np.sin(np.radians(theta_mesh))
 Z = R * np.cos(np.radians(phi_mesh))
 
 # Interpolate between points to increase the number of faces
-for _ in range(3):  # Interpolate three times (adjust as needed)
+for _ in range(3):
     X = interp_array(X)
     Y = interp_array(Y)
     Z = interp_array(Z)
 
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(1, 1, 1, projection='3d')
-# ax = fig.add_subplot(111, projection='3d')
-ax.grid(True)
+ax.grid(False)
 ax.axis('off')
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_zticks([])
 
+# Normalize the data
 N = np.sqrt(X**2 + Y**2 + Z**2)
-Rmax = np.max(N)
-N = N / Rmax
-
-# axes_length = 1.5
-# ax.plot([0, axes_length * Rmax], [0, 0], [0, 0], linewidth=2, color='red', label='X-axis')
-# ax.plot([0, 0], [0, axes_length * Rmax], [0, 0], linewidth=2, color='green', label='Y-axis')
-# ax.plot([0, 0], [0, 0], [0, axes_length * Rmax], linewidth=2, color='blue', label='Z-axis')
+# Rmax = np.max(N)
+# N = N / Rmax
 
 # Find middle points between values for face colors
 N = interp_array(N)[1::2, 1::2]
 
-mycol = cm.viridis(N)
+# Define user-defined color limits
+# c_min, c_max = np.min(N), np.max(N)
+c_min, c_max = 20,45
 
-surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, facecolors=mycol, linewidth=0.5, antialiased=True, shade=False)
-# surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, facecolors=mycol, cmap='viridis', edgecolor='k')
-# ax.set_xlim([-axes_length * Rmax, axes_length * Rmax])
-# ax.set_ylim([-axes_length * Rmax, axes_length * Rmax])
-# ax.set_zlim([-axes_length * Rmax, axes_length * Rmax])
+# Normalize the data within the user-defined color limits
+norm = Normalize(vmin=c_min, vmax=c_max)
 
-m = cm.ScalarMappable(cmap=cm.viridis)
-m.set_array(R)
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
+# Apply normalization to the data
+normalized_data = norm(N)
 
-# Add color bar
-cbar = fig.colorbar(m, ax=ax, shrink=0.8)
+# Plot the surface with facecolors and normalized data
+surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, facecolors=cm.viridis(normalized_data), linewidth=0.5, antialiased=True, shade=False)
+
+# Add color bar using ScalarMappable
+mappable = cm.ScalarMappable(cmap=cm.viridis, norm=norm)
+mappable.set_array(N)
+cbar = fig.colorbar(mappable, ax=ax, shrink=0.8)
 cbar.set_label('SPL (dB)', rotation=270, labelpad=15)
-
-# Set legend
-ax.legend(loc='upper right', fontsize='medium')
 
 # Set title
 ax.set_title('SPL Directivity in 3D')
@@ -172,4 +161,8 @@ ax.set_title('SPL Directivity in 3D')
 # Set view angle
 ax.view_init(azim=300, elev=30)
 
+# Save the figure
+plt.savefig('SPL_Directivity_3D.pdf', bbox_inches='tight', dpi=300)
+
+# Display the plot
 plt.show()
