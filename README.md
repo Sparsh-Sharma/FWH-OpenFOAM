@@ -2,7 +2,6 @@
 
 ![Python Logo](https://www.python.org/static/community_logos/python-logo.png)
 
-
 [![OpenFOAM](https://img.shields.io/badge/OpenFOAM-v2106-blue.svg)](http://www.openfoam.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/your-username/your-repo)](https://github.com/your-username/your-repo/issues)
@@ -10,7 +9,7 @@
 
 ## Description
 
-Briefly describe your project here. Highlight its purpose, features, and potential benefits.
+This repository contains post-processing scripts for OpenFOAM solutions, specifically designed for FWH simulations. The implemented formulation focuses on pressure on solid surfaces, excluding convection.
 
 ## Table of Contents
 
@@ -21,61 +20,48 @@ Briefly describe your project here. Highlight its purpose, features, and potenti
 
 ## Installation
 
-Provide step-by-step instructions on how to install and run your project. Include any dependencies and prerequisites needed.
+To use the provided scripts, follow these steps:
 
 ```bash
 pip install your-package
-
-# FWH-OpenFOAM
-FWH post-processing scripts for OpenFOAM solutions
-
- The formulation I implemented is only for the pressure on solid surfaces though and does not include convection. 
- 
-To use the script, you need to sample the surface pressure during the simulation. Use this function in OpenFOAM:
-
-
 ```
+
+### FWH-OpenFOAM Usage
+
+To utilize the post-processing scripts, sample the surface pressure during the simulation using the following function in OpenFOAM:
+
+```bash
 functions
 {
-
   surfaceSampling
-    {
-        type surfaces;
-
-        // Where to load it from (if not already in solver)
-        libs            ("libsampling.so");
-        writeControl    writeTime;
-
-        interpolationScheme cellPoint;
-        setFormat ascii;
-        surfaceFormat raw;
-
-        // Fields to be sampled
-        fields
-        (
-            p
-        );
-
-        surfaces
-        (
-                airfoil
-            {
-                type            patchInternalField;
-                patches         ( airfoil );
-                distance 0;
-                interpolate     true;
-                triangulate     false;
-            }
-        );
-    }
+  {
+    type surfaces;
+    libs ("libsampling.so");
+    writeControl writeTime;
+    interpolationScheme cellPoint;
+    setFormat ascii;
+    surfaceFormat raw;
+    fields (p);
+    surfaces
+    (
+      airfoil
+      {
+        type patchInternalField;
+        patches (airfoil);
+        distance 0;
+        interpolate true;
+        triangulate false;
+      }
+    );
+  }
 }
+```
 
+## Post-Processing Scripts
 
-# OpenFOAM Post-Processing Scripts
+This repository includes Python scripts for post-processing data obtained from OpenFOAM simulations. The scripts focus on tasks such as extracting and analyzing pressure data, calculating sound pressure levels (SPL), and visualizing SPL directivity in 3D.
 
-This repository contains a set of Python scripts for post-processing data obtained from OpenFOAM simulations. The scripts focus on tasks such as extracting and analyzing pressure data, calculating sound pressure levels (SPL), and visualizing SPL directivity in 3D.
-
-## Script 1: read_auto.py
+### Script 1: read_auto.py
 
 This script processes OpenFOAM simulation data and extracts pressure information. It performs the following tasks:
 
@@ -83,7 +69,7 @@ This script processes OpenFOAM simulation data and extracts pressure information
 - Initializes geometrical information and extracts pressure time signals.
 - Calculates pressure on the surface and saves the results to a data file.
 
-### Usage:
+**Usage:**
 
 ```bash
 python read_auto.py
@@ -91,7 +77,7 @@ python read_auto.py
 
 Make sure to modify the script to set the appropriate patch name and adjust other parameters as needed.
 
-## Script 2: Spectra_SPLauto.py
+### Script 2: Spectra_SPLauto.py
 
 This script calculates the Sound Pressure Level (SPL) at a specified observer point in the simulation domain. It reads the previously processed data and performs the following tasks:
 
@@ -99,7 +85,7 @@ This script calculates the Sound Pressure Level (SPL) at a specified observer po
 - Calculates SPL for a specified observer position and saves the results.
 - Generates a plot of SPL over frequency.
 
-### Usage:
+**Usage:**
 
 ```bash
 python Spectra_SPLauto.py
@@ -107,7 +93,7 @@ python Spectra_SPLauto.py
 
 Make sure to update the observer position and adjust other parameters based on your simulation.
 
-## Script 3: 2D_directivityauto.py
+### Script 3: 2D_directivityauto.py
 
 This script extends the SPL calculation to evaluate SPL directivity at multiple angles around an observer point. It performs the following tasks:
 
@@ -115,7 +101,7 @@ This script extends the SPL calculation to evaluate SPL directivity at multiple 
 - Saves directivity data to CSV files.
 - Generates polar plots illustrating directivity at specific frequencies.
 
-### Usage:
+**Usage:**
 
 ```bash
 python 2D_directivityauto.py
@@ -123,7 +109,7 @@ python 2D_directivityauto.py
 
 Adjust the number of angles, frequencies, and observer positions as needed.
 
-## Script 4: 3D_directivityauto.py
+### Script 4: 3D_directivityauto.py
 
 This script visualizes SPL directivity in 3D. It reads the previously calculated SPL directivity data and performs the following tasks:
 
@@ -131,7 +117,7 @@ This script visualizes SPL directivity in 3D. It reads the previously calculated
 - Interpolates data for smoother visualization.
 - Generates a 3D plot of SPL directivity.
 
-### Usage:
+**Usage:**
 
 ```bash
 python 3D_directivityauto.py
@@ -140,7 +126,6 @@ python 3D_directivityauto.py
 Customize the colormap and adjust observer positions for different visualizations.
 
 Feel free to explore and modify these scripts based on your specific needs. If you encounter any issues or have suggestions for improvements, please create an issue in the repository.
-
 
 ### License
 
