@@ -14,8 +14,8 @@ This repository contains post-processing scripts for OpenFOAM solutions, specifi
 ## Table of Contents
 
 - [Installation](#installation)
-- [FWH-OpenFOAM Usage](#FWH-OpenFOAMUsage)
-- [Post-Processing Scripts](#Post-ProcessingScripts)
+- [FWH-OpenFOAM Usage](#FWH-OpenFOAM Usage)
+- [Post-Processing Scripts](#Post-Processing Scripts)
 - [License](#License)
 
 ## Installation
