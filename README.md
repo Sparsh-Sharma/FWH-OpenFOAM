@@ -11,7 +11,7 @@
 
 This repository contains post-processing scripts for OpenFOAM solutions, specifically designed for FWH simulations. The implemented formulation focuses on pressure on solid surfaces, excluding convection.
 
-[Figure1.png](SPL_Directivity_3Djet-1.png)
+[](SPL_Directivity_3Djet-1.png)
    <img src="SPL_Directivity_3Djet-1.png" alt="Figure 1" width="300"/>
    
 
