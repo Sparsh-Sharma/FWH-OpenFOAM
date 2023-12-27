@@ -133,6 +133,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Acknowledgments
 
-- This script was developed by Sparsh Sharma.
+- This script was developed by Sparsh Sharma (DLR) and Erik Schneehagen (TU Berlin).
 
 Feel free to customize this template according to your project's specific details. Add more sections as needed, such as installation instructions, troubleshooting tips, or any additional acknowledgments.
