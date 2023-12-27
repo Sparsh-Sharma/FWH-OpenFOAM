@@ -44,10 +44,10 @@ functions
     fields (p);
     surfaces
     (
-      airfoil
+      PATCH
       {
         type patchInternalField;
-        patches (airfoil);
+        patches (PATCH);
         distance 0;
         interpolate true;
         triangulate false;
