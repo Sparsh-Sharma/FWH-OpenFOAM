@@ -71,43 +71,6 @@ functions
 }
 
 
-
-
-## Usage for directivity.py
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/Sparsh-Sharma/FWH-OpenFOAM.git
-cd FWH-OpenFOAM
-```
-
-2. Run the script:
-
-```bash
-python directivity.py
-```
-
-3. View the generated polar plots in the `plots/` directory.
-
-## Parameters
-
-- `fs`: Sampling frequency
-- `c`: Speed of sound
-- `rho0`: Density of air
-- `dt`: Time step
-- `freq_of_interest`: Frequencies for SPL calculation
-- `x0_values`: Observer positions (x0 values)
-- `num_angles`: Number of angles to consider
-- `theta_values`: Angles in degrees
-
-## Files
-
-- `directivity_script.py`: Main script for calculating SPL directivity.
-- `data_geo.pckl`: Pickled file containing geometry data.
-- `plots/`: Directory containing the generated polar plots.
-
-
 # OpenFOAM Post-Processing Scripts
 
 This repository contains a set of Python scripts for post-processing data obtained from OpenFOAM simulations. The scripts focus on tasks such as extracting and analyzing pressure data, calculating sound pressure levels (SPL), and visualizing SPL directivity in 3D.
@@ -177,7 +140,7 @@ python 3D_directivityauto.py
 Customize the colormap and adjust observer positions for different visualizations.
 
 Feel free to explore and modify these scripts based on your specific needs. If you encounter any issues or have suggestions for improvements, please create an issue in the repository.
-```
+
 
 ## License
 
