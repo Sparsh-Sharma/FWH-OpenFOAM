@@ -142,11 +142,11 @@ Customize the colormap and adjust observer positions for different visualization
 Feel free to explore and modify these scripts based on your specific needs. If you encounter any issues or have suggestions for improvements, please create an issue in the repository.
 
 
-## License
+### License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+### Acknowledgments
 
 - This script was developed by Sparsh Sharma.
 
