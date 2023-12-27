@@ -13,7 +13,8 @@ This repository contains post-processing scripts for OpenFOAM solutions, specifi
 
 [](SPL_Directivity_3Djet-1.png)
    <img src="SPL_Directivity_3Djet-1.png" alt="Figure 1" width="300"/>
-   
+[](Directivity_Polar_plot_x0_0.2_freq_0.1Hz-1.png)
+   <img src="Directivity_Polar_plot_x0_0.2_freq_0.1Hz-1.png" alt="Figure 1" width="300"/>   
 
 ## Table of Contents
 
