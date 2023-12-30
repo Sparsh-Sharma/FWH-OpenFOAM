@@ -3,31 +3,78 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Specify the directory where your CSV fils are located
-csv_directory = '/scratch/ws/m0/shar_sp-LES/LEN/80_2_1000Mean'
+# Get the directory where the script is located
+script_directory = os.path.dirname(os.path.realpath(__file__))
 
-# Get a list of all CSV files in the directory
-csv_files = glob.glob(os.path.join(csv_directory, '*.csv'))
+# Get a list of all CSV files in the script's directory
+csv_files = glob.glob(os.path.join(script_directory, '*.csv'))
 
-# Create an empty DataFrame to store the aggregated data
-aggregate_data = pd.DataFrame()
+# Check if there are matching files
+if not csv_files:
+    print("No CSV files found in the script's directory")
+    exit()
 
-# Iterate through each CSV file and append the data to the DataFrame
+# Initialize variables to store time-averaged data
+total_tu = None
+total_time = 0
+
+# Loop through each CSV file
 for csv_file in csv_files:
-    df = pd.read_csv(csv_file)
-    aggregate_data = aggregate_data.append(df, ignore_index=True)
+    try:
+        # Read CSV file into a Pandas DataFrame
+        df = pd.read_csv(csv_file)
 
-# Calculate the time-averaged turbulence intensity
-time_averaged_data = aggregate_data.groupby('Time').mean().reset_index()
+        # Check if 'Tu' column exists
+        if 'Tu' not in df.columns:
+            print(f"Warning: 'Tu' column not found in {csv_file}. Skipping...")
+            continue
 
-# Plot the time-averaged turbulence intensity
-plt.plot(time_averaged_data['Time'], time_averaged_data['Tu'])
-plt.xlabel('Time')
-plt.ylabel('Tu (Turbulence Intensity)')
-plt.title('Time-Averaged Turbulence Intensity along 2D Line')
-plt.grid(True)
-plt.savefig('/scratch/ws/m0/shar_sp-LES/LEN/80_2_1000Mean/Tufigure.png')
+        # Extract time and Tu columns
+        time = df['Time'].values
+        tu = df['Tu'].values
+
+        # Accumulate time-averaged Tu
+        total_tu = total_tu + tu if total_tu is not None else tu
+        total_time += 1
+    except Exception as e:
+        print(f"Error reading {csv_file}: {e}")
+
+# Check if any valid files were processed
+if total_time == 0:
+    print("No valid CSV files found.")
+    exit()
+
+# Calculate time-averaged Tu
+average_tu = total_tu / total_time
+
+# Create a DataFrame for the averaged data
+averaged_data = pd.DataFrame({'X-coordinate': df['Points:0'].values,
+                              'Average_Tu': average_tu})
+
+# Plot and save the figure
+fig, ax = plt.subplots()
+line, = ax.plot(averaged_data['X-coordinate'] / 0.2, averaged_data['Average_Tu'] * 100, color='blue', linewidth=2,
+                label='80mm|2mm|Nozzle')
+ax.set_xlabel('x/c')
+ax.set_ylabel('Tu (%)')
+# ax.set_title('Time-Averaged Turbulence Intensity')
+ax.set_xlim([0, 10])  # Replace with actual x-axis limits
+ax.set_ylim([0, 6])  # Replace with actual y-axis limits
+ax.legend(loc='upper right', fontsize=14)
+ax.grid(True)
+
+# Set sans-serif font
+font = {'family': 'sans-serif', 'size': 18}
+plt.rc('font', **font)
+
+# Adjust layout to prevent label cutoff
+fig.tight_layout()
+
+# Save the figure
+fig.savefig(os.path.join(script_directory, 'averaged_turbulence_intensity.pdf'))
+
+# Save the averaged data to a new CSV file
+averaged_data.to_csv(os.path.join(script_directory, 'averaged_turbulence_intensity.csv'), index=False)
+
+# Show the plot (optional)
 plt.show()
-
-# Save the time-averaged data to a new CSV file
-time_averaged_data.to_csv('/scratch/ws/m0/shar_sp-LES/LEN/80_2_1000Mean/averaged_data.csv', index=False)
