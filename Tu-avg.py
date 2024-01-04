@@ -1,10 +1,26 @@
 import os
 import glob
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Get the directory where the script is located
 script_directory = os.path.dirname(os.path.realpath(__file__))
+
+# Get the parent directory name
+parent_directory_name = os.path.basename(os.path.dirname(script_directory))
+
+# Extract information from the parent directory name using regular expressions
+match = re.match(r'(\d+)_(\d+)_(\d+)', parent_directory_name)
+if match:
+    # Extract the values from the regular expression match
+    diameter, thickness, nozzle = match.groups()
+
+    # Create the label for the plot dynamically
+    label = f'{diameter}mm|{thickness}mm|{"Nozzle" if nozzle == "1000" else "HW"}'
+else:
+    print(f"Warning: Unable to extract information from the parent directory name: {parent_directory_name}. Using default label.")
+    label = 'Default Label'
 
 # Get a list of all CSV files in the script's directory
 csv_files = glob.glob(os.path.join(script_directory, '*.csv'))
@@ -51,15 +67,19 @@ average_tu = total_tu / total_time
 averaged_data = pd.DataFrame({'X-coordinate': df['Points:0'].values,
                               'Average_Tu': average_tu})
 
+# Construct filenames with the parent directory name as a prefix
+pdf_filename = f"{parent_directory_name}_averaged_turbulence_intensity.pdf"
+csv_filename = f"{parent_directory_name}_averaged_turbulence_intensity.csv"
+
 # Plot and save the figure
 fig, ax = plt.subplots()
 line, = ax.plot(averaged_data['X-coordinate'] / 0.2, averaged_data['Average_Tu'] * 100, color='blue', linewidth=2,
-                label='80mm|2mm|Nozzle')
+                label=label)  # Use the dynamically created label
 ax.set_xlabel('x/c')
 ax.set_ylabel('Tu (%)')
 # ax.set_title('Time-Averaged Turbulence Intensity')
 ax.set_xlim([0, 10])  # Replace with actual x-axis limits
-ax.set_ylim([0, 6])  # Replace with actual y-axis limits
+ax.set_ylim([0, 10])  # Replace with actual y-axis limits
 ax.legend(loc='upper right', fontsize=14)
 ax.grid(True)
 
@@ -70,11 +90,11 @@ plt.rc('font', **font)
 # Adjust layout to prevent label cutoff
 fig.tight_layout()
 
-# Save the figure
-fig.savefig(os.path.join(script_directory, 'averaged_turbulence_intensity.pdf'))
+# Save the figure with the parent directory name as a prefix
+fig.savefig(os.path.join(script_directory, pdf_filename))
 
-# Save the averaged data to a new CSV file
-averaged_data.to_csv(os.path.join(script_directory, 'averaged_turbulence_intensity.csv'), index=False)
+# Save the averaged data to a new CSV file with the parent directory name as a prefix
+averaged_data.to_csv(os.path.join(script_directory, csv_filename), index=False)
 
 # Show the plot (optional)
 plt.show()
